@@ -16,8 +16,6 @@ class LALO_ENUM(Enum):
     COM = 1
     IP = 2
     BLE = 3
-    MOBILE = 4
-    STATIONARY = 5
 
 ##################################################################################
 # # example use from CLI, params are optional
@@ -47,10 +45,11 @@ customSettings = SimpleNamespace(
     gpsMode=meshtastic.config_pb2.Config.PositionConfig.GpsMode.ENABLED,
     # longName="JB_RZE_TAK2@2.5.7",
     # shortName="JBR2",
-    # gpsMode=LALO_ENUM.STATIONARY.name,
+    # options: ENABLED | DISABLED | NOT_PRESENT
     # gpsMode=meshtastic.config_pb2.Config.PositionConfig.GpsMode.DISABLED,
     # !!!SENSITIVE_DATA!!! # it this link is embedded lora settings which are overrided below
-    channelUrl=r'https://meshtastic.org/e/#-',
+    # channelUrl=r'https://meshtastic.org/e/#',
+    channelUrl=r'https://meshtastic.org/e/#CgMSAQESCAgBOAtAA0gB',
     bluetoothPIN=111000,  # !!!SENSITIVE_DATA!!! # max 6 digits
     # options: ['CLIENT', 'CLIENT_MUTE', 'ROUTER', 'ROUTER_CLIENT', 'REPEATER', 'TRACKER', 'SENSOR', 'TAK', 'CLIENT_HIDDEN', 'LOST_AND_FOUND', 'TAK_TRACKER']
     nodeRole=meshtastic.config_pb2.Config.DeviceConfig.Role.TAK,
@@ -58,6 +57,7 @@ customSettings = SimpleNamespace(
     fixedLongitude=23.982287,
     fixedAltitude=170,  # integers only
 )
+
 
 
 wifiNetworkParams = SimpleNamespace(
@@ -68,12 +68,12 @@ wifiNetworkParams = SimpleNamespace(
     # ip=2885789888,  # "192.168.1.172"
     ip=2919344320,  # "192.168.1.174"
     subnet=16777215,  # "255.255.255.0"
-    wifi_ssid="",  # !!!SENSITIVE_DATA!!!
-    wifi_psk="",  # !!!SENSITIVE_DATA!!!
+    wifi_ssid="passw0rd",  # !!!SENSITIVE_DATA!!!
+    wifi_psk="grzybnia",  # !!!SENSITIVE_DATA!!!
 )
 
 
-#####################################
+##########################################
 ########### BEGIN SCRIPT DATA ############
 
 
@@ -277,7 +277,7 @@ while True:
 
     if customSettings.gpsMode == ourNode.localConfig.position.GpsMode.DISABLED:
         # dont move it to config position - it crashed there
-        print(f'{INFOlbl}update STATIONARY fixedPosition...')
+        print(f'{INFOlbl}update fixedPosition...')
         ourNode.setFixedPosition(customSettings.fixedLatitude +
                                  vno, customSettings.fixedLongitude + vno,
                                  int(customSettings.fixedAltitude) + vno)
