@@ -31,9 +31,12 @@ class LALO_ENUM(Enum):
 # targetName = "BLE:Meshtastic_54f4"  # options: BLE:nodename or MAC
 
 
-targetName = "COM4"  # options: COM1 | COM2 | COM3 ... etc or IP:192.168.1.171
-# targetName = "IP:192.168.1.174" # options: IP:xxx.xxx.xxx.xxx
+# targetName = "COM4"  # options: COM1 | COM2 | COM3 ... etc or IP:192.168.1.171
+targetName = "IP:192.168.1.174" # options: IP:xxx.xxx.xxx.xxx
+# Found: name='Meshtastic_7e68' address='A0:DD:6C:69:7E:6A'
 # targetName = "BLE:JBM4_7e68"  # options: BLE:nodename or MAC
+# targetName = "BLE:Meshtastic_7e68"  # options: BLE:nodename or MAC
+# targetName = "BLE:A0:DD:6C:69:7E:6A"  # options: BLE:nodename or MAC
 
 customSettings = SimpleNamespace(
     longName="JB_MOB_TAK4@2.5.7",
@@ -45,8 +48,8 @@ customSettings = SimpleNamespace(
     # gpsMode=LALO_ENUM.STATIONARY.name,
     # gpsMode=meshtastic.config_pb2.Config.PositionConfig.GpsMode.DISABLED,
     # !!!SENSITIVE_DATA!!! # it this link is embedded lora settings which are overrided below
-    channelUrl=r'https://meshtastic.org/e/#-',
-    bluetoothPIN=111999,  # !!!SENSITIVE_DATA!!! # max 6 digits
+    channelUrl=r'https://meshtastic.org/e/#',
+    bluetoothPIN=111000,  # !!!SENSITIVE_DATA!!! # max 6 digits
     # options: ['CLIENT', 'CLIENT_MUTE', 'ROUTER', 'ROUTER_CLIENT', 'REPEATER', 'TRACKER', 'SENSOR', 'TAK', 'CLIENT_HIDDEN', 'LOST_AND_FOUND', 'TAK_TRACKER']
     nodeRole=meshtastic.config_pb2.Config.DeviceConfig.Role.TAK,
     fixedLatitude=55.060981,
@@ -54,13 +57,17 @@ customSettings = SimpleNamespace(
     fixedAltitude=170,  # integers only
 )
 
+
+
+
+
 wifiNetworkParams = SimpleNamespace(
-    enabled=False,
+    enabled=True,
     dns=16885952,  # "192.168.1.1"
     gateway=16885952,  # "192.168.1.1"
     # you can get this from online calculators but enter like 172.1.168.192
-    ip=2885789888,  # "192.168.1.172"
-    # ip=2919344320,  # "192.168.1.174"
+    # ip=2885789888,  # "192.168.1.172"
+    ip=2919344320,  # "192.168.1.174"
     subnet=16777215,  # "255.255.255.0"
     wifi_ssid="",  # !!!SENSITIVE_DATA!!!
     wifi_psk="",  # !!!SENSITIVE_DATA!!!
@@ -104,19 +111,20 @@ def ConnectToNode(targetName):
             interface = meshtastic.tcp_interface.TCPInterface(hostname=ip)
         elif targetName.startswith(LALO_ENUM.BLE.name):
             name = targetName.split(':')[1]
+            # name = targetName[4:1024]
             interface = meshtastic.ble_interface.BLEInterface(address=name)
         else:
             raise
         print(f"{OKlbl}interface found at: {targetName}")
         return interface
     except:
-        print(f"{ERRORlbl} interface not found, exiting")
+        print(f"{ERRORlbl} interface {targetName} not found, exiting")
         exit(1)
 
 
 #####################################
 ########### SCRIPT START ############
-vno = 0  # debugonly, otherwise set to 0
+vno = 2  # debugonly, otherwise set to 0
 
 # extract params
 ExtractParams(sys.argv)
@@ -124,21 +132,24 @@ ExtractParams(sys.argv)
 
 loopNo = 1
 while True:
-    loopDirty = False
+    loopDirty = ''
 
     interface = ConnectToNode(targetName)
+    print(f'{INFOlbl}\tdebugValue {vno}')
 
     ourNode = interface.getNode('^local')
     # print(f'{INFOlbl}Our node existing localConfig {vno}:{ourNode.localConfig}')
     # print(f'{INFOlbl}Our node existing moduleConfig {vno}:{ourNode.moduleConfig}')
 
     # localConfigs
-    print(f'{INFOlbl}start loop {loopNo} of updating preferences {vno}')
+    print(f'')
+    print(f'{INFOlbl}updating preferences, start loop {loopNo}')
     print(f'{INFOlbl}\tupdate localConfig...')
     # ourNode.beginSettingsTransaction()
 
     # bluetooth
     if not (targetName.startswith('BLE')):
+        configName='bluetooth'
         # False if wifiNetworkParams.enabled else True
         prev = deepcopy(ourNode.localConfig.bluetooth)
         ourNode.localConfig.bluetooth.enabled = True
@@ -146,36 +157,37 @@ while True:
             str(customSettings.bluetoothPIN)[:6].ljust(6, '0'))
         ourNode.localConfig.bluetooth.mode = ourNode.localConfig.bluetooth.FIXED_PIN
         if prev != ourNode.localConfig.bluetooth:
-            loopDirty = True
-            print(f'{INFOlbl}\t\tupdate bluetooth...')
-            ourNode.writeConfig("bluetooth")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
     else:
         print(f'{INFOlbl}\t\tconnected by BLE - bluetooth cant be changed...')
 
     # device
+    configName='device'
     prev = deepcopy(ourNode.localConfig.device)
     ourNode.localConfig.device.node_info_broadcast_secs = 3600 + vno
     ourNode.localConfig.device.rebroadcast_mode = ourNode.localConfig.device.LOCAL_ONLY
     ourNode.localConfig.device.role = customSettings.nodeRole
     ourNode.localConfig.device.serial_enabled = True
     if prev != ourNode.localConfig.device:
-        loopDirty = True
-        print(f'{INFOlbl}\t\tupdate device...')
-        ourNode.writeConfig("device")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
     # display
+    configName='display'
     prev = deepcopy(ourNode.localConfig.display)
     ourNode.localConfig.display.gps_format = ourNode.localConfig.display.MGRS
     ourNode.localConfig.display.screen_on_secs = 60 + vno
     ourNode.localConfig.display.units = ourNode.localConfig.display.METRIC
     if prev != ourNode.localConfig.display:
-        loopDirty = True
-        print(f'{INFOlbl}\t\tupdate display...')
-        ourNode.writeConfig("display")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
-    # interface.close()
-    # exit(0)
     # lora
+    configName='lora'
     prev = deepcopy(ourNode.localConfig.lora)
     ourNode.localConfig.lora.hop_limit = 7
     ourNode.localConfig.lora.override_duty_cycle = True
@@ -186,10 +198,12 @@ while True:
     ourNode.localConfig.lora.use_preset = True
     ourNode.localConfig.lora.override_frequency = 433.625
     if prev != ourNode.localConfig.lora:
-        print(f'{INFOlbl}\t\tupdate lora...')
-        ourNode.writeConfig("lora")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
     # network
+    configName='network'
     prev = deepcopy(ourNode.localConfig.network)
     ourNode.localConfig.network.address_mode = ourNode.localConfig.network.STATIC
     ourNode.localConfig.network.ipv4_config.dns = wifiNetworkParams.dns
@@ -200,11 +214,12 @@ while True:
     ourNode.localConfig.network.wifi_ssid = wifiNetworkParams.wifi_ssid
     ourNode.localConfig.network.wifi_enabled = wifiNetworkParams.enabled  # True | False
     if prev != ourNode.localConfig.network:
-        loopDirty = True
-        print(f'{INFOlbl}\t\tupdate network...')
-        ourNode.writeConfig("network")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
     # position
+    configName='position'
     prev = deepcopy(ourNode.localConfig.position)
     if customSettings.gpsMode == ourNode.localConfig.position.GpsMode.ENABLED:
         # mobile node
@@ -223,32 +238,37 @@ while True:
         ourNode.localConfig.position.fixed_position = True
 
     if prev != ourNode.localConfig.position:
-        loopDirty = True
-        print(f'{INFOlbl}\t\tupdate position {LALO_ENUM.MOBILE.name}...')
-        ourNode.writeConfig("position")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
     # moduleConfigs
     print(f'{INFOlbl}\tupdate moduleConfigs...')
 
     # neighbor_info
+    configName='neighbor_info'
     prev = deepcopy(ourNode.moduleConfig.neighbor_info)
     ourNode.moduleConfig.neighbor_info.enabled = True
     ourNode.moduleConfig.neighbor_info.update_interval = 600 + vno
     if prev != ourNode.moduleConfig.neighbor_info:
-        loopDirty = True
-        print(f'{INFOlbl}\t\tupdate neighbor_info...')
-        ourNode.writeConfig("neighbor_info")
+            loopDirty += (f'[{configName}], ')
+            print(f'{INFOlbl}\t\tupdate {configName}...')
+            ourNode.writeConfig(configName)
 
+
+
+    # update longname, shortname, islicensed
     print(f'{INFOlbl}update owner... {vno}')
     ourNode.setOwner(customSettings.longName,
                      customSettings.shortName[:4],
                      is_licensed=False)
 
     # # it this link is embedded lora settings which are overrided below
+    configName='channelUrl'
     prev = ourNode.getURL()
     if prev != customSettings.channelUrl:
-        loopDirty = True
-        print(f'{INFOlbl}update channelUrl...')
+        loopDirty += (f'[{configName}], ')
+        print(f'{INFOlbl}update {configName} https://meshtastic.org/e/#Cig...{customSettings.channelUrl[-4:]} ...')
         ourNode.setURL(customSettings.channelUrl)
 
     if customSettings.gpsMode == ourNode.localConfig.position.GpsMode.DISABLED:
@@ -262,11 +282,13 @@ while True:
 
     print(f'{INFOlbl}... finished loop {loopNo} of updating preferences {vno}')
 
-    if loopDirty:
-        print(f'{INFOlbl} there were differences, for check next loop is needed')
-        print(f'{INFOlbl} node should reboots now, wait for reconnect...', end='')
+    if len(loopDirty)>0:
+        print(f'{INFOlbl} there were differences in configs: {loopDirty}')
+        print(f'{INFOlbl} for check next loop is needed')
+        print(f'{INFOlbl} node should reboots now, wait for reconnect...')
         loopNo += 1
         interface.close()
+        time.sleep(5)
     else:
         print(f'{SUCCESSlbl} compared, and all settings are up to date now')
         print(f'{INFOlbl} node should reboots now')
