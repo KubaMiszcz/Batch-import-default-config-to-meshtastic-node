@@ -32,7 +32,7 @@ class LALO_ENUM(Enum):
 
 
 # targetName = "COM4"  # options: COM1 | COM2 | COM3 ... etc or IP:192.168.1.171
-targetName = "IP:192.168.1.174" # options: IP:xxx.xxx.xxx.xxx
+targetName = "IP:192.168.1.174"  # options: IP:xxx.xxx.xxx.xxx
 # Found: name='Meshtastic_7e68' address='A0:DD:6C:69:7E:6A'
 # targetName = "BLE:JBM4_7e68"  # options: BLE:nodename or MAC
 # targetName = "BLE:Meshtastic_7e68"  # options: BLE:nodename or MAC
@@ -61,7 +61,7 @@ customSettings = SimpleNamespace(
 
 
 wifiNetworkParams = SimpleNamespace(
-    enabled=False,
+    enabled=True,
     dns=16885952,  # "192.168.1.1"
     gateway=16885952,  # "192.168.1.1"
     # you can get this from online calculators but enter like 172.1.168.192
@@ -139,6 +139,15 @@ while True:
     # print(f'{INFOlbl}Our node existing localConfig {vno}:{ourNode.localConfig}')
     # print(f'{INFOlbl}Our node existing moduleConfig {vno}:{ourNode.moduleConfig}')
 
+    # in this link is embedded lora settings which are overrided below
+    # it needs to be set before lora due to changed lora settings modifies this link
+    configName = 'channelUrl'
+    prev = ourNode.getURL()
+    if prev != customSettings.channelUrl:
+        loopDirty += (f'[{configName}], ')
+        print(f'{INFOlbl}\t\tupdate {configName} https://meshtastic.org/e/#Cig...{customSettings.channelUrl[-4:]} ...')
+        ourNode.setURL(customSettings.channelUrl)
+
     # localConfigs
     print(f'')
     print(f'{INFOlbl}updating preferences, start loop {loopNo}')
@@ -147,7 +156,7 @@ while True:
 
     # bluetooth
     if not (targetName.startswith('BLE')):
-        configName='bluetooth'
+        configName = 'bluetooth'
         # False if wifiNetworkParams.enabled else True
         prev = deepcopy(ourNode.localConfig.bluetooth)
         ourNode.localConfig.bluetooth.enabled = True
@@ -162,7 +171,7 @@ while True:
         print(f'{INFOlbl}\t\tconnected by BLE - bluetooth cant be changed...')
 
     # device
-    configName='device'
+    configName = 'device'
     prev = deepcopy(ourNode.localConfig.device)
     ourNode.localConfig.device.node_info_broadcast_secs = 3600 + vno
     ourNode.localConfig.device.rebroadcast_mode = ourNode.localConfig.device.LOCAL_ONLY
@@ -174,7 +183,7 @@ while True:
             ourNode.writeConfig(configName)
 
     # display
-    configName='display'
+    configName = 'display'
     prev = deepcopy(ourNode.localConfig.display)
     ourNode.localConfig.display.gps_format = ourNode.localConfig.display.MGRS
     ourNode.localConfig.display.screen_on_secs = 60 + vno
@@ -185,7 +194,7 @@ while True:
             ourNode.writeConfig(configName)
 
     # lora
-    configName='lora'
+    configName = 'lora'
     prev = deepcopy(ourNode.localConfig.lora)
     ourNode.localConfig.lora.hop_limit = 7
     ourNode.localConfig.lora.override_duty_cycle = True
@@ -199,6 +208,10 @@ while True:
             loopDirty += (f'[{configName}], ')
             print(f'{INFOlbl}\t\tupdate {configName}...')
             ourNode.writeConfig(configName)
+
+            print(f'{INFOlbl}\t\tlora updated, new channelUrl:')
+            customSettings.channelUrl = ourNode.getURL()
+            print(f'{INFOlbl}\t\t{customSettings.channelUrl}')
 
     # network
     configName='network'
@@ -261,13 +274,6 @@ while True:
                      customSettings.shortName[:4],
                      is_licensed=False)
 
-    # # it this link is embedded lora settings which are overrided below
-    configName='channelUrl'
-    prev = ourNode.getURL()
-    if prev != customSettings.channelUrl:
-        loopDirty += (f'[{configName}], ')
-        print(f'{INFOlbl}update {configName} https://meshtastic.org/e/#Cig...{customSettings.channelUrl[-4:]} ...')
-        ourNode.setURL(customSettings.channelUrl)
 
     if customSettings.gpsMode == ourNode.localConfig.position.GpsMode.DISABLED:
         # dont move it to config position - it crashed there
