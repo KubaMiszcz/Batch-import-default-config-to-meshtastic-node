@@ -5,8 +5,12 @@ other defaults are in code
 
 it applies settings, reboot, checks if it applies succesfully, and if any differences fire another loop till all is identical
 
-# not tested
-# example usage from CLI, params are optional
+
+>📘 Info
+>
+> with passing parameters in CLI - not tested
+
+### example usage from CLI, params are optional
 ```python set-my-defaults-pythonapi -tgt=COM4 -ln=JB_MOB_4 -sn=JBM4```
 
 ```python set-my-defaults-pythonapi -tgt=ip:192.168.1.171 -ln=JB_MOB_Tak4 -sn=JBM4```
