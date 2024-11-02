@@ -3,7 +3,7 @@ apply default values to node,
 user specific settings in top of file
 other defaults are in code
 
-it applies settings, reboot, checks if it applies succesfully, if not make another loop till all is identical
+it applies settings, reboot, checks if it applies succesfully, and if any differences fire another loop till all is identical
 
 # not tested
 # example usage from CLI, params are optional
