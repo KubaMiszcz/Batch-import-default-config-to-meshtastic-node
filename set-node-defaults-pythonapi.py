@@ -38,6 +38,8 @@ targetName = "IP:192.168.1.174" # options: IP:xxx.xxx.xxx.xxx
 # targetName = "BLE:Meshtastic_7e68"  # options: BLE:nodename or MAC
 # targetName = "BLE:A0:DD:6C:69:7E:6A"  # options: BLE:nodename or MAC
 
+vno = 0  # debugonly, otherwise set to 0
+
 customSettings = SimpleNamespace(
     longName="JB_MOB_TAK4@2.5.7",
     shortName="JBM4",
@@ -48,7 +50,7 @@ customSettings = SimpleNamespace(
     # gpsMode=LALO_ENUM.STATIONARY.name,
     # gpsMode=meshtastic.config_pb2.Config.PositionConfig.GpsMode.DISABLED,
     # !!!SENSITIVE_DATA!!! # it this link is embedded lora settings which are overrided below
-    channelUrl=r'https://meshtastic.org/e/#',
+    channelUrl=r'https://meshtastic.org/e/#-',
     bluetoothPIN=111000,  # !!!SENSITIVE_DATA!!! # max 6 digits
     # options: ['CLIENT', 'CLIENT_MUTE', 'ROUTER', 'ROUTER_CLIENT', 'REPEATER', 'TRACKER', 'SENSOR', 'TAK', 'CLIENT_HIDDEN', 'LOST_AND_FOUND', 'TAK_TRACKER']
     nodeRole=meshtastic.config_pb2.Config.DeviceConfig.Role.TAK,
@@ -58,11 +60,8 @@ customSettings = SimpleNamespace(
 )
 
 
-
-
-
 wifiNetworkParams = SimpleNamespace(
-    enabled=True,
+    enabled=False,
     dns=16885952,  # "192.168.1.1"
     gateway=16885952,  # "192.168.1.1"
     # you can get this from online calculators but enter like 172.1.168.192
@@ -124,7 +123,6 @@ def ConnectToNode(targetName):
 
 #####################################
 ########### SCRIPT START ############
-vno = 2  # debugonly, otherwise set to 0
 
 # extract params
 ExtractParams(sys.argv)
