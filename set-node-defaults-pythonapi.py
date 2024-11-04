@@ -26,8 +26,8 @@ class LALO_ENUM(Enum):
 ##################################################################################
 targetName = "COM3"  # options: COM1 | COM2 | COM3 ... etc
 # targetName = "IP:192.168.1.172" # options: IP:xxx.xxx.xxx.xxx
-# targetName = "BLE:JBR2_5555"  # options: BLE:nodename
-# targetName = "BLE:Meshtastic_5555"  # options: BLE:nodename or MAC
+# targetName = "BLE:JBR2_54f4"  # options: BLE:nodename
+# targetName = "BLE:Meshtastic_54f4"  # options: BLE:nodename or MAC
 
 
 vno = 3  # debugonly, otherwise set to 0
@@ -59,7 +59,6 @@ wifiNetworkParams = SimpleNamespace(
 )
 
 
-
 ##########################################
 ########### BEGIN SCRIPT DATA ############
 
@@ -68,7 +67,7 @@ SUCCESSlbl = f"\033[30m\033[42mSUCCESS:\033[0m "
 INFOlbl = f"\033[30m\033[44mINFO:\033[0m "
 WARNlbl = f"\033[30m\033[43mWARN:\033[0m "
 ERRORlbl = f"\033[30m\033[41mERROR:\033[0m "
-SAFETURNOFFlbl = f"\n\033[30m\033[44m  It’s now safe to turn off your computer...  \033[0m\n"
+SAFETURNOFFlbl = f"\n\033[30m\033[44m  It’s now safe to turn off your computer...  \033[0m"
 
 
 def ExtractParams(argv):
@@ -89,7 +88,6 @@ def ExtractParams(argv):
 
 def ConnectToNode(targetName):
     try:
-        print(f'')
         print(f"{INFOlbl}lookin for interface at: {targetName}")
         if targetName.startswith(LALO_ENUM.COM.name):
             interface = meshtastic.serial_interface.SerialInterface(
@@ -120,10 +118,14 @@ ExtractParams(sys.argv)
 loopNo = 1
 while True:
     loopDirty = ''
-
-    interface = ConnectToNode(targetName)
+    print('')
+    print(f'{INFOlbl}start loop [{
+          loopNo}] of updating preferences... {vno}')
+    
     print(f'{INFOlbl}debugValue {vno}')
 
+
+    interface = ConnectToNode(targetName)
     ourNode = interface.getNode('^local')
     # print(f'{INFOlbl}Our node existing localConfig {vno}:{ourNode.localConfig}')
     # print(f'{INFOlbl}Our node existing moduleConfig {vno}:{ourNode.moduleConfig}')
@@ -272,14 +274,14 @@ while True:
 
     if len(loopDirty) > 0:
         print(f'{INFOlbl}\tthere were differences in configs: {loopDirty}')
-        print(f'{INFOlbl}\tto ensure, run the next loop is needed')
+        print(f'{INFOlbl}\tto ensure, running the next loop is needed')
         print(f'{INFOlbl}\tnode should reboots now, wait for reconnect...')
         loopNo += 1
         interface.close()
         time.sleep(5)
     else:
         print(f'{SUCCESSlbl}\tall compared, and all settings are up to date now')
-        print(f'{INFOlbl}\tdue to lora updated, new channelUrl is now:')
+        print(f'{INFOlbl}\tdue to loraConfig is updated, new channelUrl is now:')
         customSettings.channelUrl = ourNode.getURL()
         print(f'{INFOlbl}{customSettings.channelUrl}')
         print(f'{INFOlbl}node should reboots now')
